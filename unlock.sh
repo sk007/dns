@@ -23,7 +23,7 @@ if [ $? -eq 0 ]; then
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
     touch /etc/dnsmasq.d/unlock.conf
     echo "server=8.8.8.8" > /etc/dnsmasq.d/unlock.conf
-    echo "server=8.8.4.4" >> /etc/dnsmasq.d/unlock.conf
+    echo "server=1.1.1.1" >> /etc/dnsmasq.d/unlock.conf
     echo "server=/netflix.com/$1" >> /etc/dnsmasq.d/unlock.conf
     echo "server=/netflix.net/$1" >> /etc/dnsmasq.d/unlock.conf
     echo "server=/nflximg.net/$1" >> /etc/dnsmasq.d/unlock.conf
