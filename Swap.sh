@@ -4,8 +4,6 @@
 Green="\033[32m"
 Font="\033[0m"
 Red="\033[31m" 
-
-#root权限
 root_need(){
     if [[ $EUID -ne 0 ]]; then
         echo -e "${Red}Error:This script must be run as root!${Font}"
