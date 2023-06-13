@@ -8,7 +8,7 @@ plain='\033[0m'
 cur_dir=$(pwd)
 
 # check root
-[[ $EUID -ne 0 ]] && echo -e "${red}é”™è¯¯ï¼š${plain} å¿…é¡»ä½¿ç”¨rootç”¨æˆ·è¿è¡Œæ­¤è„šæœ¬ï¼\n" && exit 1
+[[ $EUID -ne 0 ]] && echo -e "${red}´íÎó£º${plain} ±ØĞëÊ¹ÓÃrootÓÃ»§ÔËĞĞ´Ë½Å±¾£¡\n" && exit 1
 
 # check os
 if [[ -f /etc/redhat-release ]]; then
@@ -26,11 +26,24 @@ elif cat /proc/version | grep -Eqi "ubuntu"; then
 elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
     release="centos"
 else
-    echo -e "${red}æœªæ£€æµ‹åˆ°ç³»ç»Ÿç‰ˆæœ¬ï¼Œè¯·è”ç³»è„šæœ¬ä½œè€…ï¼${plain}\n" && exit 1
+    echo -e "${red}Î´¼ì²âµ½ÏµÍ³°æ±¾£¬ÇëÁªÏµ½Å±¾×÷Õß£¡${plain}\n" && exit 1
 fi
 
-if [ $(getconf WORD_BIT) != '32' ] && [ $(getconf LONG_BIT) != '64' ] ; then
-    echo "æœ¬è½¯ä»¶ä¸æ”¯æŒ 32 ä½ç³»ç»Ÿ(x86)ï¼Œè¯·ä½¿ç”¨ 64 ä½ç³»ç»Ÿ(x86_64)ï¼Œå¦‚æœæ£€æµ‹æœ‰è¯¯ï¼Œè¯·è”ç³»ä½œè€…"
+arch=$(arch)
+
+if [[ $arch == "x86_64" || $arch == "x64" || $arch == "s390x" || $arch == "amd64" ]]; then
+    arch="amd64"
+elif [[ $arch == "aarch64" || $arch == "arm64" ]]; then
+    arch="arm64"
+else
+    arch="amd64"
+    echo -e "${red}¼ì²â¼Ü¹¹Ê§°Ü£¬Ê¹ÓÃÄ¬ÈÏ¼Ü¹¹: ${arch}${plain}"
+fi
+
+echo "¼Ü¹¹: ${arch}"
+
+if [ $(getconf WORD_BIT) != '32' ] && [ $(getconf LONG_BIT) != '64' ]; then
+    echo "±¾Èí¼ş²»Ö§³Ö 32 Î»ÏµÍ³(x86)£¬ÇëÊ¹ÓÃ 64 Î»ÏµÍ³(x86_64)£¬Èç¹û¼ì²âÓĞÎó£¬ÇëÁªÏµ×÷Õß"
     exit -1
 fi
 
@@ -46,101 +59,132 @@ fi
 
 if [[ x"${release}" == x"centos" ]]; then
     if [[ ${os_version} -le 6 ]]; then
-        echo -e "${red}è¯·ä½¿ç”¨ CentOS 7 æˆ–æ›´é«˜ç‰ˆæœ¬çš„ç³»ç»Ÿï¼${plain}\n" && exit 1
+        echo -e "${red}ÇëÊ¹ÓÃ CentOS 7 »ò¸ü¸ß°æ±¾µÄÏµÍ³£¡${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
     if [[ ${os_version} -lt 16 ]]; then
-        echo -e "${red}è¯·ä½¿ç”¨ Ubuntu 16 æˆ–æ›´é«˜ç‰ˆæœ¬çš„ç³»ç»Ÿï¼${plain}\n" && exit 1
+        echo -e "${red}ÇëÊ¹ÓÃ Ubuntu 16 »ò¸ü¸ß°æ±¾µÄÏµÍ³£¡${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"debian" ]]; then
     if [[ ${os_version} -lt 8 ]]; then
-        echo -e "${red}è¯·ä½¿ç”¨ Debian 8 æˆ–æ›´é«˜ç‰ˆæœ¬çš„ç³»ç»Ÿï¼${plain}\n" && exit 1
+        echo -e "${red}ÇëÊ¹ÓÃ Debian 8 »ò¸ü¸ß°æ±¾µÄÏµÍ³£¡${plain}\n" && exit 1
     fi
 fi
 
 install_base() {
     if [[ x"${release}" == x"centos" ]]; then
-        yum install wget curl tar unzip -y
+        yum install wget curl tar jq -y
     else
-        apt install wget curl tar unzip -y
+        apt install wget curl tar jq -y
     fi
 }
 
-install_v2ray() {
-    echo -e "${green}å¼€å§‹å®‰è£…orå‡çº§v2ray${plain}"
-    bash <(curl -L -s https://install.direct/go.sh)
-    if [[ $? -ne 0 ]]; then
-        echo -e "${red}v2rayå®‰è£…æˆ–å‡çº§å¤±è´¥ï¼Œè¯·æ£€æŸ¥é”™è¯¯ä¿¡æ¯${plain}"
-        echo -e "${yellow}å¤§å¤šæ•°åŸå› å¯èƒ½æ˜¯å› ä¸ºä½ å½“å‰æœåŠ¡å™¨æ‰€åœ¨çš„åœ°åŒºæ— æ³•ä¸‹è½½ v2ray å®‰è£…åŒ…å¯¼è‡´çš„ï¼Œè¿™åœ¨å›½å†…çš„æœºå™¨ä¸Šè¾ƒå¸¸è§ï¼Œè§£å†³æ–¹å¼æ˜¯æ‰‹åŠ¨å®‰è£… v2rayï¼Œå…·ä½“åŸå› è¿˜æ˜¯è¯·çœ‹ä¸Šé¢çš„é”™è¯¯ä¿¡æ¯${plain}"
-        exit 1
+#This function will be called when user installed x-ui out of sercurity
+config_after_install() {
+    echo -e "${yellow}³öÓÚ°²È«¿¼ÂÇ£¬°²×°/¸üĞÂÍê³ÉºóĞèÒªÇ¿ÖÆĞŞ¸Ä¶Ë¿ÚÓëÕË»§ÃÜÂë${plain}"
+    read -p "È·ÈÏÊÇ·ñ¼ÌĞø,ÈçÑ¡ÔñnÔòÌø¹ı±¾´Î¶Ë¿ÚÓëÕË»§ÃÜÂëÉè¶¨[y/n]": config_confirm
+    if [[ x"${config_confirm}" == x"y" || x"${config_confirm}" == x"Y" ]]; then
+        read -p "ÇëÉèÖÃÄúµÄÕË»§Ãû:" config_account
+        echo -e "${yellow}ÄúµÄÕË»§Ãû½«Éè¶¨Îª:${config_account}${plain}"
+        read -p "ÇëÉèÖÃÄúµÄÕË»§ÃÜÂë:" config_password
+        echo -e "${yellow}ÄúµÄÕË»§ÃÜÂë½«Éè¶¨Îª:${config_password}${plain}"
+        read -p "ÇëÉèÖÃÃæ°å·ÃÎÊ¶Ë¿Ú:" config_port
+        echo -e "${yellow}ÄúµÄÃæ°å·ÃÎÊ¶Ë¿Ú½«Éè¶¨Îª:${config_port}${plain}"
+        echo -e "${yellow}È·ÈÏÉè¶¨,Éè¶¨ÖĞ${plain}"
+        /usr/local/x-ui/x-ui setting -username ${config_account} -password ${config_password}
+        echo -e "${yellow}ÕË»§ÃÜÂëÉè¶¨Íê³É${plain}"
+        /usr/local/x-ui/x-ui setting -port ${config_port}
+        echo -e "${yellow}Ãæ°å¶Ë¿ÚÉè¶¨Íê³É${plain}"
+    else
+        echo -e "${red}ÒÑÈ¡ÏûÉè¶¨...${plain}"
+        if [[ ! -f "/etc/x-ui/x-ui.db" ]]; then
+            local usernameTemp=$(head -c 6 /dev/urandom | base64)
+            local passwordTemp=$(head -c 6 /dev/urandom | base64)
+            local portTemp=$(echo $RANDOM)
+            /usr/local/x-ui/x-ui setting -username ${usernameTemp} -password ${passwordTemp}
+            /usr/local/x-ui/x-ui setting -port ${portTemp}
+            echo -e "¼ì²âµ½ÄúÊôÓÚÈ«ĞÂ°²×°,³öÓÚ°²È«¿¼ÂÇÒÑ×Ô¶¯ÎªÄúÉú³ÉËæ»úÓÃ»§Óë¶Ë¿Ú:"
+            echo -e "###############################################"
+            echo -e "${green}Ãæ°åµÇÂ¼ÓÃ»§Ãû:${usernameTemp}${plain}"
+            echo -e "${green}Ãæ°åµÇÂ¼ÓÃ»§ÃÜÂë:${passwordTemp}${plain}"
+            echo -e "${red}Ãæ°åµÇÂ¼¶Ë¿Ú:${portTemp}${plain}"
+            echo -e "###############################################"
+            echo -e "${red}ÈçÄúÒÅÍüÁËÃæ°åµÇÂ¼Ïà¹ØĞÅÏ¢,¿ÉÔÚ°²×°Íê³ÉºóÊäÈëx-ui,ÊäÈëÑ¡Ïî7²é¿´Ãæ°åµÇÂ¼ĞÅÏ¢${plain}"
+        else
+            echo -e "${red}µ±Ç°ÊôÓÚ°æ±¾Éı¼¶,±£ÁôÖ®Ç°ÉèÖÃÏî,µÇÂ¼·½Ê½±£³Ö²»±ä,¿ÉÊäÈëx-uiºó¼üÈëÊı×Ö7²é¿´Ãæ°åµÇÂ¼ĞÅÏ¢${plain}"
+        fi
     fi
-    systemctl enable v2ray
-    systemctl start v2ray
 }
 
-close_firewall() {
-    if [[ x"${release}" == x"centos" ]]; then
-        systemctl stop firewalld
-        systemctl disable firewalld
-    elif [[ x"${release}" == x"ubuntu" ]]; then
-        ufw disable
-    elif [[ x"${release}" == x"debian" ]]; then
-        iptables -P INPUT ACCEPT
-        iptables -P OUTPUT ACCEPT
-        iptables -P FORWARD ACCEPT
-        iptables -F
-    fi
-}
-
-install_v2-ui() {
-    systemctl stop v2-ui
+install_x-ui() {
+    systemctl stop x-ui
     cd /usr/local/
-    if [[ -e /usr/local/v2-ui/ ]]; then
-        rm /usr/local/v2-ui/ -rf
+
+    if [ $# == 0 ]; then
+        last_version="0.3.4.2"
+        if [[ ! -n "$last_version" ]]; then
+            echo -e "${red}¼ì²â x-ui °æ±¾Ê§°Ü£¬¿ÉÄÜÊÇ³¬³ö Github API ÏŞÖÆ£¬ÇëÉÔºóÔÙÊÔ£¬»òÊÖ¶¯Ö¸¶¨ x-ui °æ±¾°²×°${plain}"
+            exit 1
+        fi
+        echo -e "¼ì²âµ½ x-ui ×îĞÂ°æ±¾£º${last_version}£¬¿ªÊ¼°²×°"
+        wget -N --no-check-certificate -O /usr/local/x-ui-linux-${arch}.tar.gz https://github.com/FranzKafkaYu/x-ui/releases/download/${last_version}/x-ui-linux-${arch}.tar.gz
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}ÏÂÔØ x-ui Ê§°Ü£¬ÇëÈ·±£ÄãµÄ·şÎñÆ÷ÄÜ¹»ÏÂÔØ Github µÄÎÄ¼ş${plain}"
+            exit 1
+        fi
+    else
+        last_version=$1
+        url="https://github.com/FranzKafkaYu/x-ui/releases/download/${last_version}/x-ui-linux-${arch}.tar.gz"
+        echo -e "¿ªÊ¼°²×° x-ui v$1"
+        wget -N --no-check-certificate -O /usr/local/x-ui-linux-${arch}.tar.gz ${url}
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}ÏÂÔØ x-ui v$1 Ê§°Ü£¬ÇëÈ·±£´Ë°æ±¾´æÔÚ${plain}"
+            exit 1
+        fi
     fi
-    last_version=$(curl -Ls "https://api.github.com/repos/sprov065/v2-ui/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-    echo -e "æ£€æµ‹åˆ°v2-uiæœ€æ–°ç‰ˆæœ¬ï¼š${last_version}ï¼Œå¼€å§‹å®‰è£…"
-    wget -N --no-check-certificate -O /usr/local/v2-ui-linux.tar.gz https://github.com/sprov065/v2-ui/releases/download/${last_version}/v2-ui-linux.tar.gz
-    if [[ $? -ne 0 ]]; then
-        echo -e "${red}ä¸‹è½½v2-uiå¤±è´¥ï¼Œè¯·ç¡®ä¿ä½ çš„æœåŠ¡å™¨èƒ½å¤Ÿä¸‹è½½Githubçš„æ–‡ä»¶ï¼Œå¦‚æœå¤šæ¬¡å®‰è£…å¤±è´¥ï¼Œè¯·å‚è€ƒæ‰‹åŠ¨å®‰è£…æ•™ç¨‹${plain}"
-        exit 1
+
+    if [[ -e /usr/local/x-ui/ ]]; then
+        rm /usr/local/x-ui/ -rf
     fi
-    tar zxvf v2-ui-linux.tar.gz
-    rm v2-ui-linux.tar.gz -f
-    cd v2-ui
-    chmod +x v2-ui
-    cp -f v2-ui.service /etc/systemd/system/
+
+    tar zxvf x-ui-linux-${arch}.tar.gz
+    rm x-ui-linux-${arch}.tar.gz -f
+    cd x-ui
+    chmod +x x-ui bin/xray-linux-${arch}
+    cp -f x-ui.service /etc/systemd/system/
+    wget --no-check-certificate -O /usr/bin/x-ui https://raw.githubusercontent.com/FranzKafkaYu/x-ui/main/x-ui.sh
+    chmod +x /usr/local/x-ui/x-ui.sh
+    chmod +x /usr/bin/x-ui
+    config_after_install
+    #echo -e "Èç¹ûÊÇÈ«ĞÂ°²×°£¬Ä¬ÈÏÍøÒ³¶Ë¿ÚÎª ${green}54321${plain}£¬ÓÃ»§ÃûºÍÃÜÂëÄ¬ÈÏ¶¼ÊÇ ${green}admin${plain}"
+    #echo -e "Çë×ÔĞĞÈ·±£´Ë¶Ë¿ÚÃ»ÓĞ±»ÆäËû³ÌĞòÕ¼ÓÃ£¬${yellow}²¢ÇÒÈ·±£ 54321 ¶Ë¿ÚÒÑ·ÅĞĞ${plain}"
+    #    echo -e "ÈôÏë½« 54321 ĞŞ¸ÄÎªÆäËü¶Ë¿Ú£¬ÊäÈë x-ui ÃüÁî½øĞĞĞŞ¸Ä£¬Í¬ÑùÒ²ÒªÈ·±£ÄãĞŞ¸ÄµÄ¶Ë¿ÚÒ²ÊÇ·ÅĞĞµÄ"
+    #echo -e ""
+    #echo -e "Èç¹ûÊÇ¸üĞÂÃæ°å£¬Ôò°´ÄãÖ®Ç°µÄ·½Ê½·ÃÎÊÃæ°å"
+    #echo -e ""
     systemctl daemon-reload
-    systemctl enable v2-ui
-    systemctl start v2-ui
-    echo -e "${green}v2-ui v${last_version}${plain} å®‰è£…å®Œæˆï¼Œé¢æ¿å·²å¯åŠ¨ï¼Œ"
+    systemctl enable x-ui
+    systemctl start x-ui
+    echo -e "${green}x-ui v${last_version}${plain} °²×°Íê³É£¬Ãæ°åÒÑÆô¶¯£¬"
     echo -e ""
-    echo -e "å¦‚æœæ˜¯å…¨æ–°å®‰è£…ï¼Œé»˜è®¤ç½‘é¡µç«¯å£ä¸º ${green}65432${plain}ï¼Œç”¨æˆ·åå’Œå¯†ç é»˜è®¤éƒ½æ˜¯ ${green}admin${plain}"
-    echo -e "è¯·è‡ªè¡Œç¡®ä¿æ­¤ç«¯å£æ²¡æœ‰è¢«å…¶ä»–ç¨‹åºå ç”¨ï¼Œ${yellow}å¹¶ä¸”ç¡®ä¿ 65432 ç«¯å£å·²æ”¾è¡Œ${plain}"
-    echo -e "è‹¥æƒ³å°† 65432 ä¿®æ”¹ä¸ºå…¶å®ƒç«¯å£ï¼Œè¾“å…¥ v2-ui å‘½ä»¤è¿›è¡Œä¿®æ”¹ï¼ŒåŒæ ·ä¹Ÿè¦ç¡®ä¿ä½ ä¿®æ”¹çš„ç«¯å£ä¹Ÿæ˜¯æ”¾è¡Œçš„"
-    echo -e ""
-    echo -e "å¦‚æœæ˜¯æ›´æ–°é¢æ¿ï¼Œåˆ™æŒ‰ä½ ä¹‹å‰çš„æ–¹å¼è®¿é—®é¢æ¿"
-    echo -e ""
-    curl -o /usr/bin/v2-ui -Ls https://raw.githubusercontent.com/sprov065/v2-ui/master/v2-ui.sh
-    chmod +x /usr/bin/v2-ui
-    echo -e "v2-ui ç®¡ç†è„šæœ¬ä½¿ç”¨æ–¹æ³•: "
+    echo -e "x-ui ¹ÜÀí½Å±¾Ê¹ÓÃ·½·¨: "
     echo -e "----------------------------------------------"
-    echo -e "v2-ui              - æ˜¾ç¤ºç®¡ç†èœå• (åŠŸèƒ½æ›´å¤š)"
-    echo -e "v2-ui start        - å¯åŠ¨ v2-ui é¢æ¿"
-    echo -e "v2-ui stop         - åœæ­¢ v2-ui é¢æ¿"
-    echo -e "v2-ui restart      - é‡å¯ v2-ui é¢æ¿"
-    echo -e "v2-ui status       - æŸ¥çœ‹ v2-ui çŠ¶æ€"
-    echo -e "v2-ui enable       - è®¾ç½® v2-ui å¼€æœºè‡ªå¯"
-    echo -e "v2-ui disable      - å–æ¶ˆ v2-ui å¼€æœºè‡ªå¯"
-    echo -e "v2-ui log          - æŸ¥çœ‹ v2-ui æ—¥å¿—"
-    echo -e "v2-ui update       - æ›´æ–° v2-ui é¢æ¿"
-    echo -e "v2-ui install      - å®‰è£… v2-ui é¢æ¿"
-    echo -e "v2-ui uninstall    - å¸è½½ v2-ui é¢æ¿"
+    echo -e "x-ui              - ÏÔÊ¾¹ÜÀí²Ëµ¥ (¹¦ÄÜ¸ü¶à)"
+    echo -e "x-ui start        - Æô¶¯ x-ui Ãæ°å"
+    echo -e "x-ui stop         - Í£Ö¹ x-ui Ãæ°å"
+    echo -e "x-ui restart      - ÖØÆô x-ui Ãæ°å"
+    echo -e "x-ui status       - ²é¿´ x-ui ×´Ì¬"
+    echo -e "x-ui enable       - ÉèÖÃ x-ui ¿ª»ú×ÔÆô"
+    echo -e "x-ui disable      - È¡Ïû x-ui ¿ª»ú×ÔÆô"
+    echo -e "x-ui log          - ²é¿´ x-ui ÈÕÖ¾"
+    echo -e "x-ui v2-ui        - Ç¨ÒÆ±¾»úÆ÷µÄ v2-ui ÕËºÅÊı¾İÖÁ x-ui"
+    echo -e "x-ui update       - ¸üĞÂ x-ui Ãæ°å"
+    echo -e "x-ui install      - °²×° x-ui Ãæ°å"
+    echo -e "x-ui uninstall    - Ğ¶ÔØ x-ui Ãæ°å"
+    echo -e "x-ui geo          - ¸üĞÂ geo  Êı¾İ"
     echo -e "----------------------------------------------"
 }
 
-echo -e "${green}å¼€å§‹å®‰è£…${plain}"
+echo -e "${green}¿ªÊ¼°²×°${plain}"
 install_base
-install_v2ray
-close_firewall
-install_v2-ui
+install_x-ui $1
